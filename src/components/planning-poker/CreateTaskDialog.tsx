@@ -35,6 +35,11 @@ export const CreateTaskDialog = ({
       onCreateTask(title, description);
       setTitle("");
       setDescription("");
+      // Close the sheet after creating task
+      const sheetTrigger = document.querySelector('[data-state="open"]');
+      if (sheetTrigger) {
+        (sheetTrigger as HTMLButtonElement).click();
+      }
     }
   };
 

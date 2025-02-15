@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "./supabase";
 
 interface User {
   id: string;
@@ -16,50 +17,90 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
-  return context;
-};
-
-const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In development, auto-sign in with a test account
-    if (import.meta.env.DEV) {
-      const devUser = {
-        id: "dev-user",
-        name: "Dev User",
-        email: "dev@example.com",
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=dev`,
-      };
-      setUser(devUser);
-      localStorage.setItem("user", JSON.stringify(devUser));
-    } else {
-      // In production, check if user is already signed in
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    // Check current auth session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const authUser = {
+          id: session.user.id,
+          name:
+            session.user.user_metadata.full_name ||
+            session.user.email?.split("@")[0],
+          email: session.user.email,
+          avatarUrl:
+            session.user.user_metadata.avatar_url ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.id}`,
+        };
+        setUser(authUser);
+        localStorage.setItem("user", JSON.stringify(authUser));
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        const authUser = {
+          id: session.user.id,
+          name:
+            session.user.user_metadata.full_name ||
+            session.user.email?.split("@")[0],
+          email: session.user.email,
+          avatarUrl:
+            session.user.user_metadata.avatar_url ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user.id}`,
+        };
+        setUser(authUser);
+        localStorage.setItem("user", JSON.stringify(authUser));
+      } else {
+        setUser(null);
+        localStorage.removeItem("user");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async () => {
-    // Simulate Google Sign In
-    const mockUser = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: "Test User",
-      email: "test@example.com",
-      avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Math.random()}`,
-    };
-    setUser(mockUser);
-    localStorage.setItem("user", JSON.stringify(mockUser));
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: "https://awesome-driscoll9-l3anj.dev.tempolabs.ai/signin",
+          queryParams: {
+            prompt: "select_account",
+            access_type: "offline",
+          },
+        },
+      });
+
+      if (error) {
+        console.error("Error signing in:", error);
+        throw error;
+      }
+
+      if (!data.url) {
+        throw new Error("No OAuth URL returned");
+      }
+    } catch (error) {
+      console.error("Failed to sign in:", error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Error signing out:", error);
+    }
     setUser(null);
     localStorage.removeItem("user");
   };
@@ -69,7 +110,13 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export { useAuth };
+function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  return context;
+}
+
+export { AuthProvider, useAuth };
 export default AuthProvider;

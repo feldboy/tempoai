@@ -1,37 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { RoomList, Room } from "./RoomList";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function LandingPage() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [rooms, setRooms] = useState<Room[]>([
-    {
-      id: "1",
-      name: "Frontend Team Sprint Planning",
-      createdBy: "user1",
-      playerCount: 5,
-    },
-    {
-      id: "2",
-      name: "Backend Team Estimation",
-      createdBy: "user2",
-      playerCount: 3,
-    },
-  ]);
+  const [rooms, setRooms] = useState<Room[]>([]);
 
-  const handleCreateRoom = (roomName: string) => {
-    const newRoom: Room = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: roomName,
-      createdBy: user?.id || "",
-      playerCount: 1,
+  useEffect(() => {
+    loadRooms();
+
+    const subscription = supabase
+      .channel("rooms_channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "rooms" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setRooms((prev) => [...prev, payload.new as Room]);
+          } else if (payload.eventType === "DELETE") {
+            setRooms((prev) =>
+              prev.filter((room) => room.id !== payload.old.id),
+            );
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
     };
-    setRooms([...rooms, newRoom]);
-    navigate(`/room/${newRoom.id}`);
+  }, []);
+
+  const loadRooms = async () => {
+    const { data, error } = await supabase.from("rooms").select(`
+        *,
+        room_players:room_players(count)
+      `);
+
+    if (error) {
+      console.error("Error loading rooms:", error);
+      return;
+    }
+
+    setRooms(
+      data.map((room) => ({
+        id: room.id,
+        name: room.name,
+        createdBy: room.created_by,
+        playerCount: room.room_players?.[0]?.count || 0,
+      })),
+    );
+  };
+
+  const handleCreateRoom = async (roomName: string) => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("rooms")
+      .insert([
+        {
+          name: roomName,
+          created_by: user.id,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating room:", error);
+      return;
+    }
+
+    navigate(`/room/${data.id}`);
   };
 
   const handleJoinRoom = (roomId: string) => {

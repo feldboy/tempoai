@@ -29,14 +29,19 @@ const PlayerCard = ({
       </Avatar>
       <span className="text-sm font-medium text-gray-700">{playerName}</span>
       <motion.div
-        className="w-full"
-        animate={{ rotateY: isRevealed ? 0 : 180 }}
-        transition={{ duration: 0.6, type: "spring" }}
+        className="w-full relative"
+        initial={false}
+        animate={{
+          rotateY: isRevealed ? 0 : 180,
+          transition: { duration: 0.6, type: "spring" },
+        }}
+        style={{ transformStyle: "preserve-3d" }}
       >
         <Card
-          className={`w-full aspect-[2/3] flex items-center justify-center
+          className={`w-full aspect-[2/3] flex items-center justify-center absolute inset-0
             ${hasVoted ? "border-blue-500 border-2" : "border-gray-200"}
-            ${isRevealed ? "bg-white" : "bg-blue-500"}`}
+            ${isRevealed ? "bg-white rotate-y-0" : "bg-blue-500 rotate-y-180"}
+            backface-visibility-hidden transition-transform duration-600`}
         >
           {isRevealed ? (
             <span className="text-3xl font-bold text-blue-500">{value}</span>
