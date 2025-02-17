@@ -15,7 +15,7 @@ export default defineConfig({
   base:
     process.env.NODE_ENV === "development"
       ? "/"
-      : process.env.VITE_BASE_PATH || "/",
+      : process.env.VITE_PUBLIC_URL || "/",
   optimizeDeps: {
     entries: ["src/main.tsx", "src/tempobook/**/*"],
   },

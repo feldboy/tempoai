@@ -74,7 +74,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: "https://awesome-driscoll9-l3anj.dev.tempolabs.ai/signin",
+          redirectTo: window.location.origin + "/signin",
           queryParams: {
             prompt: "select_account",
             access_type: "offline",

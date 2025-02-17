@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import PlayerCard from "./PlayerCard";
 import { TaskList, Task } from "./TaskList";
 import { CreateTaskDialog } from "./CreateTaskDialog";
+import { supabase } from "@/lib/supabase";
+import { useParams } from "react-router-dom";
 
 interface Player {
   id: string;
@@ -31,11 +33,105 @@ const GameArea = ({
   ],
   isRevealed = false,
   averageRating = null,
-  tasks = [],
-  currentTask = null,
-  onSelectTask = () => {},
-  onCreateTask = () => {},
+  tasks: initialTasks = [],
+  currentTask: initialCurrentTask = null,
+  onSelectTask = (task: Task) => {},
+  onCreateTask: parentOnCreateTask = (title: string, description: string) => {},
 }: GameAreaProps) => {
+  const { roomId } = useParams();
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [currentTask, setCurrentTask] = useState<Task | null>(
+    initialCurrentTask,
+  );
+
+  useEffect(() => {
+    if (roomId) {
+      // Load initial tasks
+      loadTasks();
+
+      // Subscribe to task changes
+      const subscription = supabase
+        .channel(`tasks:${roomId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "tasks",
+            filter: `room_id=eq.${roomId}`,
+          },
+          (payload) => {
+            if (payload.eventType === "INSERT") {
+              setTasks((prev) => [...prev, payload.new as Task]);
+            } else if (payload.eventType === "UPDATE") {
+              setTasks((prev) =>
+                prev.map((task) =>
+                  task.id === payload.new.id ? (payload.new as Task) : task,
+                ),
+              );
+            }
+          },
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [roomId]);
+
+  const loadTasks = async () => {
+    if (!roomId) return;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .eq("room_id", roomId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error loading tasks:", error);
+      return;
+    }
+
+    setTasks(data || []);
+  };
+
+  const handleCreateTask = async (title: string, description: string) => {
+    if (!roomId) return;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .insert([
+        {
+          title,
+          description,
+          room_id: roomId,
+          status: "pending",
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating task:", error);
+      return;
+    }
+
+    // Call parent handler
+    parentOnCreateTask(title, description);
+
+    // Set as current task
+    const newTask = data as Task;
+    setCurrentTask(newTask);
+    onSelectTask(newTask);
+  };
+
+  const handleSelectTask = (task: Task) => {
+    setCurrentTask(task);
+    onSelectTask(task);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 w-full min-h-[600px]">
       {/* Task List Section */}
@@ -44,14 +140,14 @@ const GameArea = ({
           <h2 className="text-lg font-semibold">Tasks</h2>
           <CreateTaskDialog
             tasks={tasks}
-            onCreateTask={onCreateTask}
-            onSelectTask={onSelectTask}
+            onCreateTask={handleCreateTask}
+            onSelectTask={handleSelectTask}
             currentTaskId={currentTask?.id}
           />
         </div>
         <TaskList
           tasks={tasks}
-          onSelectTask={onSelectTask}
+          onSelectTask={handleSelectTask}
           currentTaskId={currentTask?.id}
         />
       </div>
