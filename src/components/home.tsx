@@ -29,6 +29,7 @@ interface Room {
 
 const Home = () => {
   const { roomId } = useParams();
+  const baseUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isRevealed, setIsRevealed] = useState(false);

@@ -76,7 +76,8 @@ export default function LandingPage() {
       return;
     }
 
-    navigate(`/room/${data.id}`);
+    const baseUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
+    window.location.href = `${baseUrl}/room/${data.id}`;
   };
 
   const handleJoinRoom = (roomId: string) => {
