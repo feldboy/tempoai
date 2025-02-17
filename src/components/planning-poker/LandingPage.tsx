@@ -5,6 +5,7 @@ import { RoomList, Room } from "./RoomList";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { getAppUrl } from "@/utils/url";
 
 export default function LandingPage() {
   const { user, signOut } = useAuth();
@@ -76,8 +77,8 @@ export default function LandingPage() {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
-    window.location.href = `${baseUrl}/room/${data.id}`;
+    const baseUrl = getAppUrl();
+    navigate(`/room/${data.id}`);
   };
 
   const handleJoinRoom = (roomId: string) => {
