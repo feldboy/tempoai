@@ -11,17 +11,27 @@ if (process.env.TEMPO === "true") {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
+  const isProduction = mode === "production";
+
   return {
-    base: command === "serve" ? "/" : "./",
+    base: isProduction ? "./" : "/",
     define: {
       "process.env.VITE_PUBLIC_URL": JSON.stringify(
         process.env.VITE_PUBLIC_URL,
       ),
-      "process.env.VITE_TEMPO": JSON.stringify(process.env.TEMPO),
+      "process.env.VITE_TEMPO": JSON.stringify(process.env.VITE_TEMPO),
       "process.env.VITE_BASE_PATH": JSON.stringify(
         process.env.VITE_BASE_PATH || "/",
       ),
+    },
+    build: {
+      outDir: "dist", 
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
     },
     optimizeDeps: {
       entries: ["src/main.tsx", "src/tempobook/**/*"],

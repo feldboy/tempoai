@@ -1,5 +1,3 @@
-export const BASE_URL = window.location.origin;
-
 export const ROUTES = {
   HOME: "/",
   SIGNIN: "/signin",
@@ -7,5 +5,5 @@ export const ROUTES = {
 };
 
 export const getFullUrl = (path: string) => {
-  return `${BASE_URL}${path}`;
+  return path;
 };
