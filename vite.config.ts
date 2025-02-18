@@ -11,31 +11,39 @@ if (process.env.TEMPO === "true") {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig({
-  base: "/",
-  define: {
-    "process.env.VITE_PUBLIC_URL": JSON.stringify(process.env.VITE_PUBLIC_URL),
-  },
-  optimizeDeps: {
-    entries: ["src/main.tsx", "src/tempobook/**/*"],
-  },
-  plugins: [
-    react({
-      plugins: conditionalPlugins,
-    }),
-    tempo(),
-  ],
-  resolve: {
-    preserveSymlinks: true,
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+export default defineConfig(({ command }) => {
+  return {
+    base: command === "serve" ? "/" : "./",
+    define: {
+      "process.env.VITE_PUBLIC_URL": JSON.stringify(
+        process.env.VITE_PUBLIC_URL,
+      ),
+      "process.env.VITE_TEMPO": JSON.stringify(process.env.TEMPO),
+      "process.env.VITE_BASE_PATH": JSON.stringify(
+        process.env.VITE_BASE_PATH || "/",
+      ),
     },
-  },
-  server: {
-    // @ts-ignore
-    allowedHosts: process.env.TEMPO === "true" ? true : undefined,
-    host: "0.0.0.0",
-    port: 3000,
-    strictPort: true,
-  },
+    optimizeDeps: {
+      entries: ["src/main.tsx", "src/tempobook/**/*"],
+    },
+    plugins: [
+      react({
+        plugins: conditionalPlugins,
+      }),
+      tempo(),
+    ],
+    resolve: {
+      preserveSymlinks: true,
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    server: {
+      // @ts-ignore
+      allowedHosts: process.env.TEMPO === "true" ? true : undefined,
+      host: "0.0.0.0",
+      port: 3000,
+      strictPort: true,
+    },
+  };
 });

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
@@ -9,6 +9,7 @@ export default function SignInPage() {
   // Auto-redirect in development
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleAuthRedirect = async () => {
@@ -32,9 +33,10 @@ export default function SignInPage() {
 
   useEffect(() => {
     if (user) {
-      navigate("/");
+      const from = (location.state as any)?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, navigate, location]);
   const { signIn } = useAuth();
 
   const [error, setError] = useState<string | null>(null);

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Check, Copy } from "lucide-react";
+import { getFullUrl } from "@/utils/constants";
 
 interface InviteDialogProps {
   open: boolean;
@@ -22,7 +23,7 @@ export function InviteDialog({
   roomId,
 }: InviteDialogProps) {
   const [copied, setCopied] = useState(false);
-  const inviteLink = `${window.location.origin.includes("localhost") ? import.meta.env.VITE_PUBLIC_URL || window.location.origin : window.location.origin}/room/${roomId}`;
+  const inviteLink = getFullUrl(`/room/${roomId}`);
 
   useEffect(() => {
     if (copied) {
