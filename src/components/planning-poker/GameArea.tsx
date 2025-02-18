@@ -94,7 +94,12 @@ const GameArea = ({
       return;
     }
 
-    setTasks(data || []);
+    setTasks(
+      (data as any[])?.map((task) => ({
+        ...task,
+        status: task.status as "pending" | "completed",
+      })) || [],
+    );
   };
 
   const handleCreateTask = async (title: string, description: string) => {
