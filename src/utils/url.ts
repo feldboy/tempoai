@@ -1,12 +1,14 @@
 import { logger } from "./logger";
 
 export const getAppUrl = (): string => {
-  const url = window.location.origin.includes("localhost")
-    ? window.location.origin
-    : import.meta.env.VITE_PUBLIC_URL || window.location.origin;
+  // For Vercel deployments, use VITE_PUBLIC_URL if available
+  const url = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
 
-  logger.debug("App URL:", url);
-  return url;
+  // Remove trailing slash if present
+  const cleanUrl = url.replace(/\/$/, "");
+
+  logger.debug("App URL:", cleanUrl);
+  return cleanUrl;
 };
 
 export const createRoomUrl = (roomId: string): string => {

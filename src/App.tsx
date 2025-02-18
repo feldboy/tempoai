@@ -3,6 +3,7 @@ import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./components/home";
 import SignInPage from "./components/auth/SignInPage";
 import LandingPage from "./components/planning-poker/LandingPage";
+import { CreateGame } from "./components/planning-poker/CreateGame";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import routes from "tempo-routes";
 
@@ -33,6 +34,18 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create"
+          element={
+            <ProtectedRoute>
+              <CreateGame
+                onCreateGame={(name, votingSystem) =>
+                  console.log(name, votingSystem)
+                }
+              />
             </ProtectedRoute>
           }
         />

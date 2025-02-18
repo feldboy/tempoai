@@ -6,6 +6,7 @@ import GameArea from "./planning-poker/GameArea";
 import CardDeck from "./planning-poker/CardDeck";
 import { Task } from "./planning-poker/TaskList";
 import { useParams, useNavigate } from "react-router-dom";
+import { getAppUrl } from "@/utils/url";
 import { InviteDialog } from "./planning-poker/InviteDialog";
 import { CharacterSelectDialog } from "./planning-poker/CharacterSelectDialog";
 import { SaveScoreButton } from "./planning-poker/SaveScoreButton";
@@ -29,7 +30,7 @@ interface Room {
 
 const Home = () => {
   const { roomId } = useParams();
-  const baseUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
+  const baseUrl = getAppUrl();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isRevealed, setIsRevealed] = useState(false);
@@ -351,7 +352,6 @@ const Home = () => {
         }}
         currentTaskId={currentTask?.id}
       />
-
       <main className="flex-1 container mx-auto px-4 py-8 mb-32">
         <GameArea
           players={players}
@@ -399,7 +399,6 @@ const Home = () => {
           disabled={isRevealed}
         />
       </main>
-
       <SaveScoreButton
         score={averageRating}
         onSave={() => {
@@ -410,7 +409,6 @@ const Home = () => {
         disabled={!isRevealed || averageRating === null}
       />
       <Toaster />
-
       <CharacterSelectDialog
         open={showCharacterSelect}
         onOpenChange={setShowCharacterSelect}
@@ -432,12 +430,12 @@ const Home = () => {
             });
         }}
       />
-
       <InviteDialog
         open={showInviteDialog}
         onOpenChange={setShowInviteDialog}
         roomId={roomId || ""}
       />
+      <div className="w-[2px] h-[2px]"></div>
     </div>
   );
 };

@@ -12,10 +12,7 @@ if (process.env.TEMPO === "true") {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base:
-    process.env.NODE_ENV === "development"
-      ? "/"
-      : process.env.VITE_PUBLIC_URL || "/",
+  base: "/",
   define: {
     "process.env.VITE_PUBLIC_URL": JSON.stringify(process.env.VITE_PUBLIC_URL),
   },

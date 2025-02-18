@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { RoomList, Room } from "./RoomList";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Spade } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getAppUrl } from "@/utils/url";
 
@@ -89,7 +89,10 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Planning Poker</h1>
+          <div className="flex items-center gap-2">
+            <Spade className="h-6 w-6 text-blue-600" />
+            <h1 className="text-xl font-bold">Planning Poker</h1>
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">{user?.name}</span>
             <Button variant="ghost" size="icon" onClick={signOut}>
